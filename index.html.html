@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Qreate - Generador de Código QR</title>
+    <style>
+        /* Estilos generales */
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f4f8;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Contenedor principal */
+        .container {
+            background: #ffffff;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 420px;
+            animation: fadeIn 1s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Nombre de la app */
+        .app-name {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+
+        /* Título */
+        h1 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            color: #333;
+            text-align: center;
+        }
+
+        /* Campo de entrada */
+        .input-container {
+            width: 100%;
+            margin-bottom: 1.5rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s, box-shadow 0.3s;
+            text-align: center;
+        }
+
+        input:focus {
+            border-color: #007bff;
+            box-shadow: 0 0 8px rgba(0, 123, 255, 0.3);
+        }
+
+        /* Botones */
+        .button-container {
+            margin-top: 1rem;
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+            transform: scale(1.05);
+        }
+
+        /* Contenedor del QR */
+        #qrcode {
+            margin-top: 1.5rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
+        /* Pie de página */
+        .footer {
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            color: #888;
+            text-align: center;
+        }
+
+        /* Animaciones */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="app-name">Qreate</div>
+        <h1>Genera tu Código QR al Instante</h1>
+        <div class="input-container">
+            <input type="text" id="texto" placeholder="Escribe un texto o URL aquí...">
+        </div>
+        <button onclick="generarCodigoQR()">Generar QR</button>
+        <div id="qrcode"></div>
+        <div class="button-container">
+            <button id="descargarBtn" style="display: none;" onclick="descargarQR()">Descargar</button>
+            <button id="compartirBtn" style="display: none;" onclick="compartirQR()">Compartir</button>
+        </div>
+        <div class="footer">Hecho con ❤️ por Qreate</div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script>
+        let ultimoQR; // Variable global para almacenar el último QR generado
+
+        function generarCodigoQR() {
+            const contenedorQR = document.getElementById('qrcode');
+            const texto = document.getElementById('texto').value;
+
+            if (!texto.trim()) {
+                alert('Por favor, introduce un texto o enlace válido.');
+                return;
+            }
+
+            // Limpiar el contenedor para evitar superposición
+            contenedorQR.innerHTML = '';
+
+            // Generar el código QR
+            const qr = new QRCode(contenedorQR, {
+                text: texto,
+                width: 256,
+                height: 256,
+                colorDark: "#000000",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.L
+            });
+
+            // Obtener el canvas del QR generado
+            setTimeout(() => {
+                const img = contenedorQR.querySelector('img');
+                if (img) {
+                    ultimoQR = img.src; // Guardar la URL base64 de la imagen
+                }
+
+                // Mostrar botones de descargar y compartir
+                document.getElementById('descargarBtn').style.display = 'inline-block';
+                document.getElementById('compartirBtn').style.display = 'inline-block';
+            }, 100);
+        }
+
+        function descargarQR() {
+            if (!ultimoQR) return;
+            const enlace = document.createElement('a');
+            enlace.href = ultimoQR;
+            enlace.download = 'codigo_qr.png';
+            enlace.click();
+        }
+
+        function compartirQR() {
+            if (!ultimoQR) return;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Mi Código QR',
+                    text: 'Aquí tienes un código QR generado con Qreate:',
+                    url: ultimoQR // URL base64 del QR
+                })
+                .then(() => console.log('Compartido exitosamente'))
+                .catch((error) => console.log('Error al compartir:', error));
+            } else {
+                alert('La función de compartir no está disponible en este navegador.');
+            }
+        }
+    </script>
+</body>
+</html>
